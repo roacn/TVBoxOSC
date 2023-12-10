@@ -1,0 +1,84 @@
+#=======================================================================================================================
+# Description: Delete older releases and artifacts
+#=======================================================================================================================
+
+name: Delete releases and workflows
+
+on:
+  workflow_dispatch:
+    inputs:
+      DELETE_ARTIFACTS:
+        description: '删除Workflow开关'
+        required: true
+        default: true
+        type: boolean
+      KEEP_DAY:
+        description: 'Workflow保留天数'
+        required: true
+        default: '0'
+        type: string
+      KEEP_MININUM_RUNS:
+        description: 'Workflow最少保留数量'
+        required: true
+        default: '0'
+        type: string
+      DELETE_RELEASE:
+        description: '删除Release开关'
+        required: true
+        default: true
+        type: boolean
+      KEEP_MININUM_RELEASE:
+        description: 'Release最少保留数量'
+        required: true
+        default: '7'
+        type: string
+# 定时触发开启开始编译(把下面两个#去掉开启,时间设置请看定时开启编译说明)
+  schedule:
+   - cron: 0 20 * * *
+   
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id || ! github.event.sender.id
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+    - name: Parse settings
+      run: |
+        INPUTS_DELETE_ARTIFACTS="${{ github.event.inputs.DELETE_ARTIFACTS }}"
+        INPUTS_KEEP_DAY="${{ github.event.inputs.KEEP_DAY }}"
+        INPUTS_KEEP_MININUM_RUNS="${{ github.event.inputs.KEEP_MININUM_RUNS }}"
+        INPUTS_DELETE_RELEASE="${{ github.event.inputs.DELETE_RELEASE }}"
+        INPUTS_KEEP_MININUM_RELEASE="${{ github.event.inputs.KEEP_MININUM_RELEASE }}"
+
+        [ -n "$INPUTS_DELETE_ARTIFACTS" ] && DELETE_ARTIFACTS="$INPUTS_DELETE_ARTIFACTS" || DELETE_ARTIFACTS="true"
+        [ -n "$INPUTS_KEEP_DAY" ] && KEEP_DAY="$INPUTS_KEEP_DAY" || KEEP_DAY="0"
+        [ -n "$INPUTS_KEEP_MININUM_RUNS" ] && KEEP_MININUM_RUNS="$INPUTS_KEEP_MININUM_RUNS" || KEEP_MININUM_RUNS="0"
+        [ -n "$INPUTS_DELETE_RELEASE" ] && DELETE_RELEASE="$INPUTS_DELETE_RELEASE" || DELETE_RELEASE="true"
+        [ -n "$INPUTS_KEEP_MININUM_RELEASE" ] && KEEP_MININUM_RELEASE="$INPUTS_KEEP_MININUM_RELEASE" || KEEP_MININUM_RELEASE="7"
+
+        echo "DELETE_ARTIFACTS=$DELETE_ARTIFACTS" >> $GITHUB_ENV
+        echo "KEEP_DAY=$KEEP_DAY" >> $GITHUB_ENV
+        echo "KEEP_MININUM_RUNS=$KEEP_MININUM_RUNS" >> $GITHUB_ENV
+        echo "DELETE_RELEASE=$DELETE_RELEASE" >> $GITHUB_ENV
+        echo "KEEP_MININUM_RELEASE=$KEEP_MININUM_RELEASE" >> $GITHUB_ENV
+        
+    - name: Delete older workflow runs and artifacts
+      uses: Mattraks/delete-workflow-runs@main
+      if: env.DELETE_ARTIFACTS == 'true'
+      with:
+        token: ${{ secrets.REPO_TOKEN }}
+        repository: ${{ github.repository }}
+        retain_days: ${{ env.KEEP_DAY }}
+        keep_minimum_runs: ${{ env.KEEP_MININUM_RUNS }}
+        
+    - name: Delete older releases
+      uses: dev-drprasad/delete-older-releases@master
+      if: env.DELETE_RELEASE == 'true'
+      with:
+        keep_latest: ${{ env.KEEP_MININUM_RELEASE }}
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        
