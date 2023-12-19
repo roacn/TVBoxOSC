@@ -89,12 +89,11 @@ jobs:
           else
             sed -i "/jitpack.io/a\        maven { url 'https://o0HalfLife0o.github.io/crosswalk/releases/crosswalk/android/maven2' }" build.gradle
           fi
-
+          
       - name: Compress Source Code
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          #zip -q -x ".git/*" -x  ".github/*" -r source-${{ env.commitS }}.zip .
           tar -cJf source-${{ env.commitS }}.tar.xz --exclude=.git --exclude=.github *
 
       - name: Option For Test
@@ -120,9 +119,20 @@ jobs:
           sed -i '$a\RELEASE_STORE_PASSWORD=TVBoxOSC'       ./gradle.properties
           sed -i '$a\RELEASE_KEY_PASSWORD=TVBoxOSC'         ./gradle.properties
 
+      - name: Cache
+        uses: actions/cache@v3
+        if: ${{ env.commit }}
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ matrix.userName }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.userName }}-
+            
       - name: Setup Gradle
         if: ${{ env.commit }}
-        uses: gradle/gradle-build-action@main
+        uses: gradle/gradle-build-action@v2
 
       - name: Build With Gradle
         if: ${{ env.commit }}
