@@ -34,9 +34,9 @@ jobs:
           - userName: mlabalabala
             repoName: box
             branchName: main
-          - userName: XiaoRanLiu3119
-            repoName: TVBoxOS-Mobile
-            branchName: main
+          #- userName: XiaoRanLiu3119
+            #repoName: TVBoxOS-Mobile
+            #branchName: main
             
     env:
       # 登录蓝奏云后在控制台运行document.cookie
