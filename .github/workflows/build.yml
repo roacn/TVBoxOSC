@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
         with:
           fetch-depth: 0
 
@@ -120,7 +120,7 @@ jobs:
           sed -i '$a\RELEASE_KEY_PASSWORD=TVBoxOSC'         ./gradle.properties
 
       - name: Cache
-        uses: actions/cache@v3
+        uses: actions/cache@main
         if: ${{ env.commit }}
         with:
           path: |
@@ -132,7 +132,7 @@ jobs:
             
       - name: Setup Gradle
         if: ${{ env.commit }}
-        uses: gradle/gradle-build-action@v2
+        uses: gradle/gradle-build-action@main
 
       - name: Build With Gradle
         if: ${{ env.commit }}
