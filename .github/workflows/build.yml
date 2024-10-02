@@ -60,7 +60,7 @@ jobs:
 
       - name: Check New Commit
         run: |
-          upStream=https://github.com/${{ matrix.userName }}/${{ matrix.repoName }}.git
+          upStream=https://github.com/${{ matrix.userName }}/${{ matrix.repoName }}
           echo "upStream=$upStream" >> $GITHUB_ENV
           git clone https://github.com/${{ matrix.userName }}/${{ matrix.repoName }} TVBoxOSC
           cd TVBoxOSC
