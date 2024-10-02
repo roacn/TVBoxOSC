@@ -31,6 +31,7 @@ jobs:
           - userName: takagen99
             repoName: Box
             branchName: main
+            java_ver: 17
           - userName: mlabalabala
             repoName: box
             branchName: main
@@ -81,8 +82,15 @@ jobs:
         working-directory: TVBoxOSC
         run: |
           echo '修改VersionName'
-          sed -i "/versionName/s#[0-9a-zA-Z_\.\'\"-]\+\$#\'${{ env.tag }}\'#" app/build.gradle > /dev/null 2>&1
-          sed -i "/android:text=/s#=\"#=\"${{ env.tag }}\\\\n\\\\n#" app/src/main/res/layout/dialog_about.xml > /dev/null 2>&1
+          if [ "${{ matrix.userName }}" == "takagen99" ]; then
+            # 进行 sed 修改
+            sed -i 's/\.concat(buildTime())/ +\"${{ env.tag }}\"/g' app/build.gradle 
+            # 目前关于页面没有合并我的分支
+            sed -i "/android:text=/s#=\"#=\"${{ env.tag }}\\\\n\\\\n#" app/src/main/res/layout/dialog_about.xml
+          else
+            sed -i "/versionName/s#[0-9a-zA-Z_\.\'\"-]\+\$#\'${{ env.tag }}\'#" app/build.gradle
+            sed -i "/android:text=/s#=\"#=\"${{ env.tag }}\\\\n\\\\n#" app/src/main/res/layout/dialog_about.xml
+          fi 
           echo 'crosswalk源，防挂'
           if grep -q 'crosswalk' build.gradle; then
             sed -i "/crosswalk/a\        maven { url 'https://o0HalfLife0o.github.io/crosswalk/releases/crosswalk/android/maven2' }" build.gradle
@@ -130,9 +138,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.userName }}-
             
+      - uses: actions/setup-java@main
+        if: ${{ matrix.java_ver }}
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java_ver }}
+          
       - name: Setup Gradle
         if: ${{ env.commit }}
-        uses: gradle/gradle-build-action@main
+        uses: gradle/actions/setup-gradle@main
 
       - name: Build With Gradle
         if: ${{ env.commit }}
